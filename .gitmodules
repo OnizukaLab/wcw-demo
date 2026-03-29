@@ -1,0 +1,4 @@
+[submodule "wvlet"]
+	path = wvlet
+	url = git@github.com:Kaina3/wvlet.git
+	branch = custom/flatten

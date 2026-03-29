@@ -1,0 +1,256 @@
+{
+  "queries": [
+    {
+      "id": "tpch-q1",
+      "name": "TPC-H Q1: Pricing Summary",
+      "category": "tpch",
+      "sql": "SELECT\n  l_returnflag,\n  l_linestatus,\n  SUM(l_quantity) AS sum_qty,\n  SUM(l_extendedprice) AS sum_base_price,\n  SUM(l_extendedprice * (1 - l_discount)) AS sum_disc_price,\n  SUM(l_extendedprice * (1 - l_discount) * (1 + l_tax)) AS sum_charge,\n  AVG(l_quantity) AS avg_qty,\n  AVG(l_extendedprice) AS avg_price,\n  AVG(l_discount) AS avg_disc,\n  COUNT(*) AS count_order\nFROM lineitem\nWHERE l_shipdate <= DATE '1998-12-01' - INTERVAL '90' DAY\nGROUP BY l_returnflag, l_linestatus\nORDER BY l_returnflag, l_linestatus;",
+      "wvlet": "from lineitem\nwhere l_shipdate <= '1998-09-02'\ngroup by l_returnflag, l_linestatus\nagg\n  sum(l_quantity) as sum_qty,\n  sum(l_extendedprice) as sum_base_price,\n  sum(l_extendedprice * (1 - l_discount)) as sum_disc_price,\n  sum(l_extendedprice * (1 - l_discount) * (1 + l_tax)) as sum_charge,\n  avg(l_quantity) as avg_qty,\n  avg(l_extendedprice) as avg_price,\n  avg(l_discount) as avg_disc,\n  count(*) as count_order\norder by l_returnflag, l_linestatus",
+      "description": "Pricing summary report with aggregations",
+      "complexity": "low"
+    },
+    {
+      "id": "tpch-q2",
+      "name": "TPC-H Q2: Minimum Cost Supplier",
+      "category": "tpch",
+      "sql": "select s_acctbal, s_name, n_name, p_partkey, p_mfgr, s_address, s_phone, s_comment\nfrom partsupp\njoin supplier on s_suppkey = ps_suppkey\njoin nation on s_nationkey = n_nationkey\njoin region on n_regionkey = r_regionkey\njoin part on p_partkey = ps_partkey\nwhere p_size = 15\n  and p_type like '%BRASS'\n  and r_name = 'EUROPE'\n  and ps_supplycost = (\n    select min(ps_supplycost)\n    from partsupp\n    join supplier on s_suppkey = ps_suppkey\n    join nation on s_nationkey = n_nationkey\n    join region on n_regionkey = r_regionkey\n    where p_partkey = ps_partkey\n      and r_name = 'EUROPE'\n  )\norder by s_acctbal desc, n_name, s_name, p_partkey\nlimit 100",
+      "wvlet": "",
+      "description": "Correlated subquery to find min-cost supplier per part",
+      "complexity": "high"
+    },
+    {
+      "id": "tpch-q3",
+      "name": "TPC-H Q3: Shipping Priority",
+      "category": "tpch",
+      "sql": "SELECT\n  l_orderkey,\n  SUM(l_extendedprice * (1 - l_discount)) AS revenue,\n  o_orderdate,\n  o_shippriority\nFROM customer\nJOIN orders ON c_custkey = o_custkey\nJOIN lineitem ON l_orderkey = o_orderkey\nWHERE c_mktsegment = 'BUILDING'\n  AND o_orderdate < DATE '1995-03-15'\n  AND l_shipdate > DATE '1995-03-15'\nGROUP BY l_orderkey, o_orderdate, o_shippriority\nORDER BY revenue DESC, o_orderdate\nLIMIT 10;",
+      "wvlet": "from customer\njoin orders on c_custkey = o_custkey\njoin lineitem on l_orderkey = o_orderkey\nwhere\n  c_mktsegment = 'BUILDING'\n  and o_orderdate < '1995-03-15'\n  and l_shipdate > '1995-03-15'\ngroup by l_orderkey, o_orderdate, o_shippriority\nagg sum(l_extendedprice * (1 - l_discount)) as revenue\norder by revenue desc, o_orderdate\nlimit 10",
+      "description": "Shipping priority query with 3-way join",
+      "complexity": "medium"
+    },
+    {
+      "id": "tpch-q4",
+      "name": "TPC-H Q4: Order Priority Checking",
+      "category": "tpch",
+      "sql": "select  o_orderpriority, count(*) as order_count\nfrom    orders\nwhere   o_orderdate >= date '1993-07-01'\n\tand o_orderdate < date '1993-07-01' + interval '3' month\n\tand exists (\n\t\tselect  *\n\t\tfrom    lineitem\n\t\twhere   l_orderkey = o_orderkey\n\t\tand l_commitdate < l_receiptdate\n\t)\ngroup by\n\to_orderpriority\norder by\n\to_orderpriority",
+      "wvlet": "",
+      "description": "EXISTS subquery for order priority analysis",
+      "complexity": "medium"
+    },
+    {
+      "id": "tpch-q5",
+      "name": "TPC-H Q5: Local Supplier Volume",
+      "category": "tpch",
+      "sql": "select n_name, sum(l_extendedprice * (1 - l_discount)) as revenue\nfrom customer\njoin orders on c_custkey = o_custkey\njoin lineitem on l_orderkey = o_orderkey\njoin supplier on l_suppkey = s_suppkey and c_nationkey = s_nationkey\njoin nation on s_nationkey = n_nationkey\njoin region on n_regionkey = r_regionkey\nwhere r_name = 'ASIA'\n  and o_orderdate >= date '1994-01-01'\n  and o_orderdate < date '1994-01-01' + interval '1' year\ngroup by n_name\norder by revenue desc",
+      "wvlet": "",
+      "description": "6-table join for local supplier revenue",
+      "complexity": "medium"
+    },
+    {
+      "id": "tpch-q6",
+      "name": "TPC-H Q6: Forecasting Revenue Change",
+      "category": "tpch",
+      "sql": "select  sum(l_extendedprice * l_discount) as revenue\nfrom    lineitem\nwhere   l_shipdate >= date '1994-01-01'\n\tand l_shipdate < date '1994-01-01' + interval '1' year\n\tand l_discount between .06 - 0.01 and .06 + 0.01\n\tand l_quantity < 24",
+      "wvlet": "",
+      "description": "Single-table aggregation with date range filter",
+      "complexity": "low"
+    },
+    {
+      "id": "tpch-q7",
+      "name": "TPC-H Q7: Volume Shipping",
+      "category": "tpch",
+      "sql": "SELECT\n  supp_nation, cust_nation, l_year, SUM(volume) AS revenue\nFROM (\n  SELECT\n    n1.n_name AS supp_nation,\n    n2.n_name AS cust_nation,\n    EXTRACT(YEAR FROM l_shipdate) AS l_year,\n    l_extendedprice * (1 - l_discount) AS volume\n  FROM supplier\n  JOIN lineitem ON s_suppkey = l_suppkey\n  JOIN orders ON o_orderkey = l_orderkey\n  JOIN customer ON c_custkey = o_custkey\n  JOIN nation n1 ON s_nationkey = n1.n_nationkey\n  JOIN nation n2 ON c_nationkey = n2.n_nationkey\n  WHERE (\n    (n1.n_name = 'FRANCE' AND n2.n_name = 'GERMANY')\n    OR (n1.n_name = 'GERMANY' AND n2.n_name = 'FRANCE')\n  )\n  AND l_shipdate BETWEEN DATE '1995-01-01' AND DATE '1996-12-31'\n) AS shipping\nGROUP BY supp_nation, cust_nation, l_year\nORDER BY supp_nation, cust_nation, l_year;",
+      "wvlet": "from supplier\njoin lineitem on s_suppkey = l_suppkey\njoin orders on o_orderkey = l_orderkey\njoin customer on c_custkey = o_custkey\njoin nation as n1 on s_nationkey = n1.n_nationkey\njoin nation as n2 on c_nationkey = n2.n_nationkey\nwhere\n  ((n1.n_name = 'FRANCE' and n2.n_name = 'GERMANY')\n   or (n1.n_name = 'GERMANY' and n2.n_name = 'FRANCE'))\n  and l_shipdate between '1995-01-01' and '1996-12-31'\nselect\n  n1.n_name as supp_nation,\n  n2.n_name as cust_nation,\n  extract(year from l_shipdate) as l_year,\n  l_extendedprice * (1 - l_discount) as volume\ngroup by supp_nation, cust_nation, l_year\nagg sum(volume) as revenue\norder by supp_nation, cust_nation, l_year",
+      "description": "Volume shipping between nations (nested subquery → flat)",
+      "complexity": "high"
+    },
+    {
+      "id": "tpch-q8",
+      "name": "TPC-H Q8: National Market Share",
+      "category": "tpch",
+      "sql": "select o_year, sum(case\n    when nation = 'BRAZIL' then volume\n    else 0\n  end) / sum(volume) as mkt_share\nfrom (\n  select year(o_orderdate) as o_year,\n    l_extendedprice * (1 - l_discount) as volume,\n    n2.n_name as nation\n  from part\n  join lineitem on p_partkey = l_partkey\n  join supplier on s_suppkey = l_suppkey\n  join orders on l_orderkey = o_orderkey\n  join customer on o_custkey = c_custkey\n  join nation n1 on c_nationkey = n1.n_nationkey\n  join region on n1.n_regionkey = r_regionkey\n  join nation n2 on s_nationkey = n2.n_nationkey\n  where r_name = 'AMERICA'\n    and o_orderdate between date '1995-01-01' and date '1996-12-31'\n    and p_type = 'ECONOMY ANODIZED STEEL'\n) as all_nations\ngroup by o_year\norder by o_year",
+      "wvlet": "",
+      "description": "8-table join with CASE for market share calculation",
+      "complexity": "high"
+    },
+    {
+      "id": "tpch-q9",
+      "name": "TPC-H Q9: Product Type Profit",
+      "category": "tpch",
+      "sql": "select nation, o_year, sum(amount) as sum_profit\nfrom (\n  select n_name as nation, year(o_orderdate) as o_year,\n    l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount\n  from lineitem\n  join part on p_partkey = l_partkey\n  join supplier on s_suppkey = l_suppkey\n  join partsupp on ps_suppkey = l_suppkey and ps_partkey = l_partkey\n  join orders on o_orderkey = l_orderkey\n  join nation on s_nationkey = n_nationkey\n  where p_name like '%green%'\n) as profit\ngroup by nation, o_year\norder by nation, o_year desc",
+      "wvlet": "",
+      "description": "6-table join subquery for profit by nation/year",
+      "complexity": "high"
+    },
+    {
+      "id": "tpch-q10",
+      "name": "TPC-H Q10: Returned Item Reporting",
+      "category": "tpch",
+      "sql": "select c_custkey, c_name, sum(l_extendedprice * (1 - l_discount)) as revenue,\n  c_acctbal, n_name, c_address, c_phone, c_comment\nfrom customer\njoin orders on c_custkey = o_custkey\njoin lineitem on l_orderkey = o_orderkey\njoin nation on c_nationkey = n_nationkey\nwhere o_orderdate >= date '1993-10-01'\n  and o_orderdate < date '1993-10-01' + interval '3' month\n  and l_returnflag = 'R'\ngroup by c_custkey, c_name, c_acctbal, c_phone, n_name, c_address, c_comment\norder by revenue desc\nlimit 20",
+      "wvlet": "",
+      "description": "4-table join for returned item revenue",
+      "complexity": "medium"
+    },
+    {
+      "id": "tpch-q11",
+      "name": "TPC-H Q11: Important Stock",
+      "category": "tpch",
+      "sql": "SELECT\n  ps_partkey,\n  SUM(ps_supplycost * ps_availqty) AS value\nFROM partsupp\nJOIN supplier ON ps_suppkey = s_suppkey\nJOIN nation ON s_nationkey = n_nationkey\nWHERE n_name = 'GERMANY'\nGROUP BY ps_partkey\nHAVING SUM(ps_supplycost * ps_availqty) > (\n  SELECT SUM(ps_supplycost * ps_availqty) * 0.0001\n  FROM partsupp\n  JOIN supplier ON ps_suppkey = s_suppkey\n  JOIN nation ON s_nationkey = n_nationkey\n  WHERE n_name = 'GERMANY'\n)\nORDER BY value DESC;",
+      "wvlet": "let german_supply =\n  from partsupp\n  join supplier on ps_suppkey = s_suppkey\n  join nation on s_nationkey = n_nationkey\n  where n_name = 'GERMANY'\n\nfrom german_supply\ngroup by ps_partkey\nagg sum(ps_supplycost * ps_availqty) as value\nwhere value > (\n  from german_supply\n  agg sum(ps_supplycost * ps_availqty) * 0.0001\n)\norder by value desc",
+      "description": "Important stock identification (duplicated subquery → CTE)",
+      "complexity": "high"
+    },
+    {
+      "id": "tpch-q12",
+      "name": "TPC-H Q12: Shipping Modes & Order Priority",
+      "category": "tpch",
+      "sql": "select l_shipmode,\n  sum(case\n    when o_orderpriority = '1-URGENT'\n      or o_orderpriority = '2-HIGH'\n      then 1\n    else 0\n  end) as high_line_count,\n  sum(case\n    when o_orderpriority <> '1-URGENT'\n      and o_orderpriority <> '2-HIGH'\n      then 1\n    else 0\n  end) as low_line_count\nfrom orders\njoin lineitem on o_orderkey = l_orderkey\nwhere l_shipmode in ('MAIL', 'SHIP')\n  and l_commitdate < l_receiptdate\n  and l_shipdate < l_commitdate\n  and l_receiptdate >= date '1994-01-01'\n  and l_receiptdate < date '1994-01-01' + interval '1' year\ngroup by l_shipmode\norder by l_shipmode",
+      "wvlet": "",
+      "description": "CASE expressions for shipping mode analysis",
+      "complexity": "medium"
+    },
+    {
+      "id": "tpch-q13",
+      "name": "TPC-H Q13: Customer Distribution",
+      "category": "tpch",
+      "sql": "SELECT\n  c_count, COUNT(*) AS custdist\nFROM (\n  SELECT\n    c_custkey,\n    COUNT(o_orderkey) AS c_count\n  FROM customer\n  LEFT OUTER JOIN orders ON c_custkey = o_custkey\n    AND o_comment NOT LIKE '%special%requests%'\n  GROUP BY c_custkey\n) AS c_orders\nGROUP BY c_count\nORDER BY custdist DESC, c_count DESC;",
+      "wvlet": "from customer\nleft join orders on c_custkey = o_custkey\n  and o_comment not like '%special%requests%'\ngroup by c_custkey\nagg count(o_orderkey) as c_count\ngroup by c_count\nagg count(*) as custdist\norder by custdist desc, c_count desc",
+      "description": "Customer order distribution (nested → pipeline)",
+      "complexity": "medium"
+    },
+    {
+      "id": "tpch-q14",
+      "name": "TPC-H Q14: Promotion Effect",
+      "category": "tpch",
+      "sql": "select 100.00 * sum(case\n    when p_type like 'PROMO%'\n      then l_extendedprice * (1 - l_discount)\n    else 0\n  end) / sum(l_extendedprice * (1 - l_discount)) as promo_revenue\nfrom lineitem\njoin part on l_partkey = p_partkey\nwhere l_shipdate >= date '1995-09-01'\n  and l_shipdate < date '1995-09-01' + interval '1' month",
+      "wvlet": "",
+      "description": "CASE conditional aggregation for promo revenue %",
+      "complexity": "medium"
+    },
+    {
+      "id": "tpch-q15",
+      "name": "TPC-H Q15: Top Supplier",
+      "category": "tpch",
+      "sql": "with revenue0 as (\n  select l_suppkey as supplier_no,\n    sum(l_extendedprice * (1 - l_discount)) as total_revenue\n  from lineitem\n  where l_shipdate >= date '1996-01-01'\n    and l_shipdate < date '1996-01-01' + interval '3' month\n  group by l_suppkey\n)\nselect s_suppkey, s_name, s_address, s_phone, total_revenue\nfrom supplier\njoin revenue0 on s_suppkey = supplier_no\nwhere total_revenue = (\n  select max(total_revenue)\n  from revenue0\n)\norder by s_suppkey",
+      "wvlet": "",
+      "description": "CTE with max-revenue subquery",
+      "complexity": "high"
+    },
+    {
+      "id": "tpch-q16",
+      "name": "TPC-H Q16: Parts/Supplier Relationship",
+      "category": "tpch",
+      "sql": "select p_brand, p_type, p_size, count(distinct ps_suppkey) as supplier_cnt\nfrom partsupp\njoin part on p_partkey = ps_partkey\nwhere p_brand <> 'Brand#45'\n  and p_type not like 'MEDIUM POLISHED%'\n  and p_size in (49, 14, 23, 45, 19, 3, 36, 9)\n  and ps_suppkey not in (\n    select s_suppkey\n    from supplier\n    where s_comment like '%Customer%Complaints%'\n  )\ngroup by p_brand, p_type, p_size\norder by supplier_cnt desc, p_brand, p_type, p_size",
+      "wvlet": "",
+      "description": "NOT IN subquery for supplier count by part attributes",
+      "complexity": "medium"
+    },
+    {
+      "id": "tpch-q17",
+      "name": "TPC-H Q17: Small-Quantity-Order Revenue",
+      "category": "tpch",
+      "sql": "select sum(l_extendedprice) / 7.0 as avg_yearly\nfrom lineitem\njoin part on p_partkey = l_partkey\nwhere p_brand = 'Brand#23'\n  and p_container = 'MED BOX'\n  and l_quantity < (\n    select 0.2 * avg(l_quantity)\n    from lineitem\n    where l_partkey = p_partkey\n  )",
+      "wvlet": "",
+      "description": "Correlated subquery comparing quantity to average",
+      "complexity": "high"
+    },
+    {
+      "id": "tpch-q18",
+      "name": "TPC-H Q18: Large Volume Customer",
+      "category": "tpch",
+      "sql": "select c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice, sum(l_quantity)\nfrom customer\njoin orders on c_custkey = o_custkey\njoin lineitem on o_orderkey = l_orderkey\nwhere o_orderkey in (\n    select l_orderkey\n    from lineitem\n    group by l_orderkey having sum(l_quantity) > 300\n  )\ngroup by c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice\norder by o_totalprice desc, o_orderdate\nlimit 100",
+      "wvlet": "",
+      "description": "IN subquery with HAVING for large orders",
+      "complexity": "high"
+    },
+    {
+      "id": "tpch-q19",
+      "name": "TPC-H Q19: Discounted Revenue",
+      "category": "tpch",
+      "sql": "select sum(l_extendedprice * (1 - l_discount)) as revenue\nfrom lineitem\njoin part on p_partkey = l_partkey\nwhere (\n    p_brand = 'Brand#12'\n    and p_container in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG')\n    and l_quantity >= 1 and l_quantity <= 1 + 10\n    and p_size between 1 and 5\n    and l_shipmode in ('AIR', 'AIR REG')\n    and l_shipinstruct = 'DELIVER IN PERSON'\n  )\n  or (\n    p_brand = 'Brand#23'\n    and p_container in ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK')\n    and l_quantity >= 10 and l_quantity <= 10 + 10\n    and p_size between 1 and 10\n    and l_shipmode in ('AIR', 'AIR REG')\n    and l_shipinstruct = 'DELIVER IN PERSON'\n  )\n  or (\n    p_brand = 'Brand#34'\n    and p_container in ('LG CASE', 'LG BOX', 'LG PACK', 'LG PKG')\n    and l_quantity >= 20 and l_quantity <= 20 + 10\n    and p_size between 1 and 15\n    and l_shipmode in ('AIR', 'AIR REG')\n    and l_shipinstruct = 'DELIVER IN PERSON'\n  )",
+      "wvlet": "",
+      "description": "Complex 3-way OR conditions on part/lineitem",
+      "complexity": "medium"
+    },
+    {
+      "id": "tpch-q20",
+      "name": "TPC-H Q20: Potential Part Promotion",
+      "category": "tpch",
+      "sql": "select s_name, s_address\nfrom supplier\njoin nation on s_nationkey = n_nationkey\nwhere s_suppkey in (\n    select ps_suppkey\n    from partsupp\n    where ps_partkey in (\n        select p_partkey\n        from part\n        where p_name like 'forest%'\n      )\n      and ps_availqty > (\n        select 0.5 * sum(l_quantity)\n        from lineitem\n        where l_partkey = ps_partkey\n          and l_suppkey = ps_suppkey\n          and l_shipdate >= date '1994-01-01'\n          and l_shipdate < date '1994-01-01' + interval '1' year\n      )\n  )\n  and n_name = 'CANADA'\norder by s_name",
+      "wvlet": "",
+      "description": "Nested IN + correlated subquery for supplier selection",
+      "complexity": "high"
+    },
+    {
+      "id": "tpch-q21",
+      "name": "TPC-H Q21: Suppliers Who Kept Orders Waiting",
+      "category": "tpch",
+      "sql": "select s_name, count(*) as numwait\nfrom supplier\njoin lineitem l1 on s_suppkey = l1.l_suppkey\njoin orders on o_orderkey = l1.l_orderkey\njoin nation on s_nationkey = n_nationkey\nwhere o_orderstatus = 'F'\n  and l1.l_receiptdate > l1.l_commitdate\n  and exists (\n    select *\n    from lineitem l2\n    where l2.l_orderkey = l1.l_orderkey\n      and l2.l_suppkey <> l1.l_suppkey\n  )\n  and not exists (\n    select *\n    from lineitem l3\n    where l3.l_orderkey = l1.l_orderkey\n      and l3.l_suppkey <> l1.l_suppkey\n      and l3.l_receiptdate > l3.l_commitdate\n  )\n  and n_name = 'SAUDI ARABIA'\ngroup by s_name\norder by numwait desc, s_name\nlimit 100",
+      "wvlet": "",
+      "description": "EXISTS + NOT EXISTS with self-joins",
+      "complexity": "high"
+    },
+    {
+      "id": "tpch-q22",
+      "name": "TPC-H Q22: Global Sales Opportunity",
+      "category": "tpch",
+      "sql": "select  cntrycode, count(*) as numcust, sum(c_acctbal) as totacctbal\nfrom    (\n\t\tselect  substring(c_phone, 1, 2) as cntrycode,\n\t\t\tc_acctbal\n\t\tfrom    customer\n\t\twhere   substring(c_phone, 1, 2) in\n\t\t\t\t('13', '31', '23', '29', '30', '18', '17')\n\t\t\tand c_acctbal > (\n\t\t\t\tselect  avg(c_acctbal)\n\t\t\t\tfrom    customer\n\t\t\t\twhere   c_acctbal > 0.00\n\t\t\t\t\tand substring(c_phone, 1, 2) in\n\t\t\t\t\t\t('13', '31', '23', '29', '30', '18', '17')\n\t\t\t)\n\t\t\tand not exists (\n\t\t\t\tselect *\n\t\t\t\tfrom   orders\n\t\t\t\twhere  o_custkey = c_custkey\n\t\t\t)\n\t) as custsale\ngroup by\n\tcntrycode\norder by\n\tcntrycode",
+      "wvlet": "",
+      "description": "Nested subquery + NOT EXISTS for dormant customers",
+      "complexity": "high"
+    },
+    {
+      "id": "nested-correlated",
+      "name": "Correlated Subquery",
+      "category": "nested",
+      "sql": "SELECT o_orderkey, o_totalprice\nFROM orders o\nWHERE o_totalprice > (\n  SELECT AVG(o2.o_totalprice)\n  FROM orders o2\n  WHERE o2.o_custkey = o.o_custkey\n);",
+      "wvlet": "from orders as o\nwhere o_totalprice > (\n  from orders as o2\n  where o2.o_custkey = o.o_custkey\n  agg avg(o2.o_totalprice)\n)",
+      "description": "Correlated subquery with self-reference",
+      "complexity": "medium"
+    },
+    {
+      "id": "nested-exists",
+      "name": "EXISTS Pattern",
+      "category": "nested",
+      "sql": "SELECT s_name, s_address\nFROM supplier\nJOIN nation ON s_nationkey = n_nationkey\nWHERE n_name = 'CANADA'\n  AND EXISTS (\n    SELECT 1 FROM partsupp\n    WHERE ps_suppkey = s_suppkey\n    AND ps_availqty > (\n      SELECT 0.5 * SUM(l_quantity)\n      FROM lineitem\n      WHERE l_partkey = ps_partkey\n        AND l_suppkey = ps_suppkey\n        AND l_shipdate >= DATE '1994-01-01'\n        AND l_shipdate < DATE '1995-01-01'\n    )\n  );",
+      "wvlet": "from supplier\njoin nation on s_nationkey = n_nationkey\nwhere n_name = 'CANADA'\nwhere exists(\n  from partsupp\n  where ps_suppkey = s_suppkey\n  where ps_availqty > (\n    from lineitem\n    where l_partkey = ps_partkey\n      and l_suppkey = ps_suppkey\n      and l_shipdate >= '1994-01-01'\n      and l_shipdate < '1995-01-01'\n    agg 0.5 * sum(l_quantity)\n  )\n)",
+      "description": "Nested EXISTS with deep subquery",
+      "complexity": "high"
+    },
+    {
+      "id": "join-5way",
+      "name": "5-Way Join",
+      "category": "join",
+      "sql": "SELECT\n  c_name, o_orderdate, l_extendedprice, p_name, s_name\nFROM customer\nJOIN orders ON c_custkey = o_custkey\nJOIN lineitem ON l_orderkey = o_orderkey\nJOIN part ON p_partkey = l_partkey\nJOIN supplier ON s_suppkey = l_suppkey\nWHERE c_mktsegment = 'AUTOMOBILE'\n  AND o_orderdate >= DATE '1995-01-01'\nORDER BY l_extendedprice DESC\nLIMIT 20;",
+      "wvlet": "from customer\njoin orders on c_custkey = o_custkey\njoin lineitem on l_orderkey = o_orderkey\njoin part on p_partkey = l_partkey\njoin supplier on s_suppkey = l_suppkey\nwhere c_mktsegment = 'AUTOMOBILE'\n  and o_orderdate >= '1995-01-01'\nselect c_name, o_orderdate, l_extendedprice, p_name, s_name\norder by l_extendedprice desc\nlimit 20",
+      "description": "Five-table join pattern",
+      "complexity": "medium"
+    },
+    {
+      "id": "agg-window",
+      "name": "Window Functions",
+      "category": "aggregation",
+      "sql": "SELECT\n  l_orderkey,\n  l_extendedprice,\n  SUM(l_extendedprice) OVER (PARTITION BY l_orderkey) AS order_total,\n  RANK() OVER (PARTITION BY l_orderkey ORDER BY l_extendedprice DESC) AS price_rank,\n  l_extendedprice / SUM(l_extendedprice) OVER (PARTITION BY l_orderkey) AS price_pct\nFROM lineitem\nWHERE l_shipdate >= DATE '1995-01-01'\nORDER BY l_orderkey, price_rank;",
+      "wvlet": "from lineitem\nwhere l_shipdate >= '1995-01-01'\nselect\n  l_orderkey,\n  l_extendedprice,\n  sum(l_extendedprice) over (partition by l_orderkey) as order_total,\n  rank() over (partition by l_orderkey order by l_extendedprice desc) as price_rank,\n  l_extendedprice / sum(l_extendedprice) over (partition by l_orderkey) as price_pct\norder by l_orderkey, price_rank",
+      "description": "Window function analytics",
+      "complexity": "medium"
+    },
+    {
+      "id": "llm-sample-1",
+      "name": "LLM: Redundant Subquery",
+      "category": "llm",
+      "sql": "SELECT * FROM (\n  SELECT\n    c_custkey,\n    c_name,\n    (\n      SELECT COUNT(*) FROM orders WHERE o_custkey = c_custkey\n    ) AS order_count,\n    (\n      SELECT SUM(o_totalprice) FROM orders WHERE o_custkey = c_custkey\n    ) AS total_spent\n  FROM customer\n) t\nWHERE order_count > 0\nORDER BY total_spent DESC\nLIMIT 10;",
+      "wvlet": "from customer\nleft join orders on o_custkey = c_custkey\ngroup by c_custkey, c_name\nagg\n  count(o_orderkey) as order_count,\n  sum(o_totalprice) as total_spent\nwhere order_count > 0\norder by total_spent desc\nlimit 10",
+      "description": "LLM-generated with redundant correlated subqueries",
+      "complexity": "medium"
+    },
+    {
+      "id": "complex-3",
+      "name": "Flatten+DRY: Growth Customers",
+      "category": "flatten-dry",
+      "sql": "SELECT c_name, c_acctbal, spend_96\nFROM (\n    (\n        (\n            customer\n            JOIN orders ON c_custkey = o_custkey\n        )\n        JOIN lineitem ON o_orderkey = l_orderkey\n    )\n    JOIN nation ON c_nationkey = n_nationkey\n)\nWHERE n_name = 'JAPAN'\n    AND o_orderdate >= DATE '1996-01-01'\n    AND o_orderdate < DATE '1997-01-01'\nGROUP BY c_name, c_acctbal\nHAVING SUM(l_extendedprice * (1 - l_discount)) > (\n    SELECT AVG(spend_95) FROM (\n        SELECT c_custkey,\n            SUM(l_extendedprice * (1 - l_discount)) AS spend_95\n        FROM (\n            (\n                (\n                    customer\n                    JOIN orders ON c_custkey = o_custkey\n                )\n                JOIN lineitem ON o_orderkey = l_orderkey\n            )\n            JOIN nation ON c_nationkey = n_nationkey\n        )\n        WHERE n_name = 'JAPAN'\n            AND o_orderdate >= DATE '1995-01-01'\n            AND o_orderdate < DATE '1996-01-01'\n        GROUP BY c_custkey\n        HAVING SUM(l_extendedprice * (1 - l_discount)) > (\n            SELECT AVG(spend_94) FROM (\n                SELECT SUM(l_extendedprice * (1 - l_discount)) AS spend_94\n                FROM (\n                    (\n                        (\n                            customer\n                            JOIN orders ON c_custkey = o_custkey\n                        )\n                        JOIN lineitem ON o_orderkey = l_orderkey\n                    )\n                    JOIN nation ON c_nationkey = n_nationkey\n                )\n                WHERE n_name = 'JAPAN'\n                    AND o_orderdate >= DATE '1994-01-01'\n                    AND o_orderdate < DATE '1995-01-01'\n                GROUP BY c_custkey\n            ) AS base_94\n        )\n    ) AS good_95\n)\nORDER BY spend_96 DESC;",
+      "wvlet": "model yearly_spend(start_date: string, end_date: string) = {\n    from customer\n    join orders on c_custkey = o_custkey\n    join lineitem on o_orderkey = l_orderkey\n    join nation on c_nationkey = n_nationkey\n    where n_name = 'JAPAN'\n        and o_orderdate >= start_date.to_date\n        and o_orderdate < end_date.to_date\n    select c_name, c_acctbal, c_custkey,\n        spend = (l_extendedprice * (1 - l_discount))\n}\n\nfrom yearly_spend('1996-01-01', '1997-01-01')\ngroup by c_name, c_acctbal\nwhere spend.sum > {\n    from yearly_spend('1995-01-01', '1996-01-01')\n    group by c_custkey\n    where spend.sum > {\n        from yearly_spend('1994-01-01', '1995-01-01')\n        group by c_custkey\n        select spend.sum.avg\n    }\n    select spend.sum.avg\n}\nselect c_name, c_acctbal, spend_96 = spend.sum\norder by spend_96 desc",
+      "description": "Braced JOIN flatten + DRY: same join pattern x3 with different dates",
+      "complexity": "high"
+    }
+  ]
+}

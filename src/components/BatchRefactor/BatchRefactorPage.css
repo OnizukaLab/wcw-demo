@@ -1,0 +1,715 @@
+/* Batch Refactor Page Styles */
+
+.batch-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ─── Source Bar ─── */
+.batch-source-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.batch-source-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.batch-source-tab {
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.batch-source-tab:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.batch-source-tab.active {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border-color: var(--accent-primary);
+  font-weight: 600;
+}
+
+/* ─── Buttons ─── */
+.batch-btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.batch-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.batch-btn-primary {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.batch-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.batch-btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.batch-btn-secondary:hover:not(:disabled) {
+  border-color: var(--accent-primary);
+}
+
+.batch-btn-icon {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.batch-btn-icon:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.batch-link {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 4px;
+}
+
+.batch-link:hover {
+  text-decoration: underline;
+}
+
+/* ─── Body ─── */
+.batch-body {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─── Left Selector ─── */
+.batch-selector {
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+}
+
+/* Checklist */
+.batch-checklist {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.batch-checklist-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.batch-selected-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.batch-checklist-items {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px 8px;
+}
+
+.batch-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: background 0.1s;
+}
+
+.batch-check-item:hover {
+  background: var(--bg-accent-subtle);
+  color: var(--text-primary);
+}
+
+.batch-check-item input[type="checkbox"] {
+  accent-color: var(--accent-primary);
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.batch-check-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Folder tree */
+.batch-folder {
+  border-bottom: 1px solid var(--border);
+}
+
+.batch-folder:last-child {
+  border-bottom: none;
+}
+
+.batch-folder-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+}
+
+.batch-folder-toggle {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 9px;
+  padding: 2px 4px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.batch-folder-toggle:hover {
+  color: var(--accent-primary);
+}
+
+.batch-folder-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  padding: 3px 0;
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.batch-folder-label input[type="checkbox"] {
+  accent-color: var(--accent-primary);
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.batch-folder-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.batch-folder-count {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.batch-folder-children {
+  padding-left: 28px;
+  padding-bottom: 2px;
+}
+
+/* Custom Input */
+.batch-custom-input {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.batch-drop-zone {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.batch-drop-zone textarea {
+  width: 100%;
+  height: 100%;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: none;
+  padding: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  resize: none;
+  outline: none;
+}
+
+.batch-custom-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.batch-custom-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* ─── Results Area ─── */
+.batch-results-area {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Progress */
+.batch-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  flex-shrink: 0;
+}
+
+.batch-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-card);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.batch-progress-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 3px;
+  transition: width 0.2s;
+}
+
+.batch-progress span {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Summary */
+.batch-summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.batch-summary-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.batch-summary-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.batch-summary-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.batch-summary-wvlet {
+  color: var(--accent-primary);
+}
+
+.batch-positive {
+  color: #4caf50 !important;
+}
+
+.batch-negative {
+  color: var(--accent-danger) !important;
+}
+
+.batch-download-group {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* ─── Shared Models Panel ─── */
+.batch-shared-models {
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.batch-shared-models-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 16px;
+  background: var(--bg-secondary);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  font-size: 12px;
+  transition: background 0.1s;
+}
+
+.batch-shared-models-header:hover {
+  background: var(--bg-accent-subtle);
+}
+
+.batch-shared-models-icon {
+  font-size: 8px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.batch-shared-models-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.batch-shared-models-badge {
+  background: var(--bg-accent-medium);
+  color: var(--accent-primary);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+
+.batch-shared-models-hint {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.batch-shared-models-editor {
+  height: 200px;
+  border-top: 1px solid var(--border);
+  overflow: auto;
+}
+
+.batch-shared-models-editor .cm-editor {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.batch-shared-models-editor .code-pane {
+  height: 100%;
+}
+
+/* Table */
+.batch-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.batch-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.batch-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+  z-index: 1;
+}
+
+.batch-table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.batch-table-row {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.batch-table-row:hover {
+  background: var(--bg-accent-subtle);
+}
+
+.batch-row-selected {
+  background: var(--bg-selected) !important;
+}
+
+.batch-row-error {
+  opacity: 0.5;
+}
+
+.batch-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.batch-td-num {
+  width: 32px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.batch-td-name {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.batch-td-lines {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.batch-td-metric {
+  position: relative;
+  min-width: 80px;
+}
+
+.batch-rcore-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent-danger);
+  opacity: 0.4;
+  border-radius: 1px;
+}
+
+.batch-rcore-wvlet {
+  background: var(--accent-primary);
+}
+
+.batch-td-delta {
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* Empty State */
+.batch-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Detail View — full panel */
+.batch-detail {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Fullscreen overlay */
+.batch-detail-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Bottom Preview Panel ─── */
+.batch-table-compact {
+  flex: 0 1 auto;
+  max-height: 40%;
+  min-height: 100px;
+}
+
+.batch-preview {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 200px;
+  border-top: 2px solid var(--accent-primary);
+  overflow: hidden;
+}
+
+.batch-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.batch-preview-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.batch-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.batch-preview-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.batch-preview-editors {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.batch-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.batch-detail-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.batch-detail-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.batch-detail-lines {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.batch-detail-body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.batch-detail-editors {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.batch-detail-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.batch-detail-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.batch-detail-editor {
+  flex: 1;
+  overflow: auto;
+}
+
+.batch-detail-editor .code-pane {
+  height: 100%;
+}
+
+.batch-detail-editor .cm-editor {
+  height: 100%;
+}
+
+.batch-detail-divider {
+  width: 2px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.batch-detail-metrics {
+  border-left: 1px solid var(--border);
+  background: var(--bg-primary);
+  overflow-y: auto;
+}
+
+.batch-detail-metrics .cognitive-dashboard {
+  padding: 8px !important;
+  gap: 8px !important;
+}

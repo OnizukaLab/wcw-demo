@@ -1,0 +1,9 @@
+{
+  "categories": [
+    { "id": "tpch", "name": "TPC-H", "description": "Standard TPC-H benchmark queries", "icon": "📊" },
+    { "id": "nested", "name": "Nested", "description": "Complex nested subquery patterns", "icon": "🔄" },
+    { "id": "join", "name": "Join Heavy", "description": "Multi-table join patterns", "icon": "🔗" },
+    { "id": "aggregation", "name": "Aggregation", "description": "GROUP BY / window function patterns", "icon": "📈" },
+    { "id": "llm", "name": "LLM Generated", "description": "AI-generated SQL with structural issues", "icon": "🤖" }
+  ]
+}

@@ -1,0 +1,357 @@
+/* WCW Demo - Main Layout */
+:root,
+[data-theme="dark"] {
+  --bg-primary: #0a0a1a;
+  --bg-secondary: #12122a;
+  --bg-card: #1e1e2e;
+  --bg-inset: #16162a;
+  --bg-hover: rgba(255, 255, 255, 0.03);
+  --bg-selected: rgba(78, 205, 196, 0.08);
+  --bg-accent-subtle: rgba(78, 205, 196, 0.1);
+  --bg-accent-medium: rgba(78, 205, 196, 0.15);
+  --bg-accent-strong: rgba(78, 205, 196, 0.2);
+  --bg-danger-subtle: rgba(255, 107, 107, 0.1);
+  --bg-danger-medium: rgba(255, 107, 107, 0.15);
+  --bg-warning-subtle: rgba(255, 217, 61, 0.05);
+  --border: #2a2a3a;
+  --border-subtle: #333;
+  --border-strong: #444;
+  --text-primary: #e8e8e8;
+  --text-secondary: #aaa;
+  --text-tertiary: #888;
+  --text-muted: #666;
+  --text-faint: #555;
+  --text-on-accent: #1a1a2e;
+  --accent-primary: #4ecdc4;
+  --accent-danger: #ff6b6b;
+  --accent-warning: #ffd93d;
+  --accent-purple: #6c5ce7;
+  --bar-inactive: #3a3a5a;
+  --scrollbar-thumb: #333;
+  --scrollbar-thumb-hover: #555;
+  --cm-bg: #0a0a1a;
+  --cm-gutter-bg: #12122a;
+  --svg-arrow: #555;
+  --svg-edge: #444;
+  --plan-bg: #16162a;
+  --gradient-positive: linear-gradient(90deg, transparent, rgba(78, 205, 196, 0.3));
+  --gradient-negative: linear-gradient(270deg, transparent, rgba(255, 107, 107, 0.3));
+}
+
+[data-theme="light"] {
+  --bg-primary: #f5f7fc;
+  --bg-secondary: #e8ecf6;
+  --bg-card: #ffffff;
+  --bg-inset: #eef1f9;
+  --bg-hover: rgba(0, 0, 0, 0.03);
+  --bg-selected: rgba(26, 158, 150, 0.08);
+  --bg-accent-subtle: rgba(26, 158, 150, 0.08);
+  --bg-accent-medium: rgba(26, 158, 150, 0.12);
+  --bg-accent-strong: rgba(26, 158, 150, 0.18);
+  --bg-danger-subtle: rgba(217, 83, 79, 0.08);
+  --bg-danger-medium: rgba(217, 83, 79, 0.12);
+  --bg-warning-subtle: rgba(230, 172, 0, 0.06);
+  --border: #d0d5e4;
+  --border-subtle: #dde1ec;
+  --border-strong: #b8bdd0;
+  --text-primary: #1a1e2e;
+  --text-secondary: #4a4e6a;
+  --text-tertiary: #6a6e8a;
+  --text-muted: #8a8ea8;
+  --text-faint: #a0a4b8;
+  --text-on-accent: #ffffff;
+  --accent-primary: #1a9e96;
+  --accent-danger: #d9534f;
+  --accent-warning: #c89200;
+  --accent-purple: #5a4ad1;
+  --bar-inactive: #c8cce0;
+  --scrollbar-thumb: #c0c4d8;
+  --scrollbar-thumb-hover: #a0a4b8;
+  --cm-bg: #ffffff;
+  --cm-gutter-bg: #eef1f9;
+  --svg-arrow: #a0a4b8;
+  --svg-edge: #b0b4c8;
+  --plan-bg: #eef1f9;
+  --gradient-positive: linear-gradient(90deg, transparent, rgba(26, 158, 150, 0.25));
+  --gradient-negative: linear-gradient(270deg, transparent, rgba(217, 83, 79, 0.25));
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-primary);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* App Layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.app-header h1 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent-primary);
+  letter-spacing: 0.5px;
+}
+
+.app-header .subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 12px;
+}
+
+/* Mode tabs in header */
+.mode-tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: 20px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.mode-tab {
+  padding: 4px 14px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.mode-tab:hover {
+  color: var(--text-primary);
+}
+
+.mode-tab.active {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  font-weight: 600;
+}
+
+/* 3-panel layout */
+.app-main {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Left panel - Workload Browser */
+.panel-left {
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+}
+
+/* Center panel - Editor + Plan + Verify */
+.panel-center {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-center-top {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.panel-center-bottom {
+  height: 260px;
+  flex-shrink: 0;
+  display: flex;
+  gap: 2px;
+  border-top: 1px solid var(--border);
+}
+
+.panel-center-bottom > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Right panel - Dashboard */
+.panel-right {
+  border-left: 1px solid var(--border);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+/* Batch mode - full width */
+.app-main-batch {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* CodeMirror overrides */
+.code-pane .cm-editor {
+  height: 100%;
+  background: var(--cm-bg);
+}
+
+.code-pane .cm-gutters {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+}
+
+.code-pane .cm-activeLineGutter {
+  background: var(--bg-accent-subtle);
+}
+
+/* CodeMirror light-mode text color fix */
+.code-pane .cm-editor .cm-content {
+  color: var(--text-primary);
+}
+
+.code-pane .cm-editor .cm-line {
+  color: var(--text-primary);
+}
+
+.code-pane .cm-gutters .cm-lineNumbers .cm-gutterElement {
+  color: var(--text-muted);
+}
+
+/* Focus states */
+button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+input:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+
+/* Transitions */
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Loading state */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  z-index: 100;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top: 3px solid var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .app-main {
+    grid-template-columns: 240px 1fr 280px;
+  }
+}
+
+@media (max-width: 960px) {
+  .app-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+  .panel-left, .panel-right {
+    border: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 200px;
+  }
+}

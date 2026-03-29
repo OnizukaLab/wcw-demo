@@ -1,0 +1,136 @@
+{
+  "transformations": {
+    "tpch-q1": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from lineitem\nwhere l_shipdate <= '1998-12-01':date - \"'90' day\":interval\ngroup by l_returnflag, l_linestatus\nselect \n  l_returnflag,\n  l_linestatus,\n  SUM(l_quantity) as sum_qty,\n  SUM(l_extendedprice) as sum_base_price,\n  SUM(l_extendedprice * (1 - l_discount)) as sum_disc_price,\n  SUM(l_extendedprice * (1 - l_discount) * (1 + l_tax)) as sum_charge,\n  AVG(l_quantity) as avg_qty,\n  AVG(l_extendedprice) as avg_price,\n  AVG(l_discount) as avg_disc,\n  COUNT(*) as count_order\norder by l_returnflag, l_linestatus"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "from lineitem\nwhere l_shipdate <= '1998-09-02'\ngroup by l_returnflag, l_linestatus\nagg\n  sum(l_quantity) as sum_qty,\n  sum(l_extendedprice) as sum_base_price,\n  sum(l_extendedprice * (1 - l_discount)) as sum_disc_price,\n  sum(l_extendedprice * (1 - l_discount) * (1 + l_tax)) as sum_charge,\n  avg(l_quantity) as avg_qty,\n  avg(l_extendedprice) as avg_price,\n  avg(l_discount) as avg_disc,\n  count(*) as count_order\norder by l_returnflag, l_linestatus"
+        }
+      ]
+    },
+    "tpch-q3": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from customer\njoin orders on c_custkey = o_custkey\njoin lineitem on l_orderkey = o_orderkey\nwhere \n  c_mktsegment = 'BUILDING'\n  and o_orderdate < '1995-03-15':date\n  and l_shipdate > '1995-03-15':date\ngroup by l_orderkey, o_orderdate, o_shippriority\nselect \n  l_orderkey,\n  SUM(l_extendedprice * (1 - l_discount)) as revenue,\n  o_orderdate,\n  o_shippriority\norder by revenue desc, o_orderdate\nlimit 10"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "from customer\njoin orders on c_custkey = o_custkey\njoin lineitem on l_orderkey = o_orderkey\nwhere\n  c_mktsegment = 'BUILDING'\n  and o_orderdate < '1995-03-15'\n  and l_shipdate > '1995-03-15'\ngroup by l_orderkey, o_orderdate, o_shippriority\nagg sum(l_extendedprice * (1 - l_discount)) as revenue\norder by revenue desc, o_orderdate\nlimit 10"
+        }
+      ]
+    },
+    "tpch-q7": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from {\n  {\n    from supplier\n    join lineitem on s_suppkey = l_suppkey\n    join orders on o_orderkey = l_orderkey\n    join customer on c_custkey = o_custkey\n    join nation as n1 on s_nationkey = n1.n_nationkey\n    join nation as n2 on c_nationkey = n2.n_nationkey\n    where \n      (\n        (n1.n_name = 'FRANCE' and n2.n_name = 'GERMANY')\n        or (n1.n_name = 'GERMANY' and n2.n_name = 'FRANCE')\n      )\n      and l_shipdate between '1995-01-01':date and '1996-12-31':date\n    select \n      n1.n_name as supp_nation,\n      n2.n_name as cust_nation,\n      l_shipdate.extract('year') as l_year,\n      l_extendedprice * (1 - l_discount) as volume\n  }\n} as shipping\ngroup by supp_nation, cust_nation, l_year\nselect supp_nation, cust_nation, l_year, SUM(volume) as revenue\norder by supp_nation, cust_nation, l_year"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "from supplier\njoin lineitem on s_suppkey = l_suppkey\njoin orders on o_orderkey = l_orderkey\njoin customer on c_custkey = o_custkey\njoin nation as n1 on s_nationkey = n1.n_nationkey\njoin nation as n2 on c_nationkey = n2.n_nationkey\nwhere\n  ((n1.n_name = 'FRANCE' and n2.n_name = 'GERMANY')\n   or (n1.n_name = 'GERMANY' and n2.n_name = 'FRANCE'))\n  and l_shipdate between '1995-01-01' and '1996-12-31'\nselect\n  n1.n_name as supp_nation,\n  n2.n_name as cust_nation,\n  extract(year from l_shipdate) as l_year,\n  l_extendedprice * (1 - l_discount) as volume\ngroup by supp_nation, cust_nation, l_year\nagg sum(volume) as revenue\norder by supp_nation, cust_nation, l_year"
+        }
+      ]
+    },
+    "tpch-q11": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from partsupp\njoin supplier on ps_suppkey = s_suppkey\njoin nation on s_nationkey = n_nationkey\nwhere n_name = 'GERMANY'\ngroup by ps_partkey\nwhere \n  SUM(ps_supplycost * ps_availqty) > {\n    from partsupp\n    join supplier on ps_suppkey = s_suppkey\n    join nation on s_nationkey = n_nationkey\n    where n_name = 'GERMANY'\n    select SUM(ps_supplycost * ps_availqty) * 0.0001\n  }\nselect ps_partkey, SUM(ps_supplycost * ps_availqty) as `value`\norder by `value` desc"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "model german_supply = {\n  from partsupp\n  join supplier on ps_suppkey = s_suppkey\n  join nation on s_nationkey = n_nationkey\n  where n_name = 'GERMANY'\n}\n\nfrom german_supply\ngroup by ps_partkey\nagg sum(ps_supplycost * ps_availqty) as value\nwhere value > (\n  from german_supply\n  agg sum(ps_supplycost * ps_availqty) * 0.0001\n)\norder by value desc"
+        }
+      ]
+    },
+    "tpch-q13": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from {\n  {\n    from customer\n    left join orders\n      on c_custkey = o_custkey\n      and o_comment not like '%special%requests%'\n    group by c_custkey\n    select c_custkey, COUNT(o_orderkey) as c_count\n  }\n} as c_orders\ngroup by c_count\nselect c_count, COUNT(*) as custdist\norder by custdist desc, c_count desc"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "from customer\nleft join orders on c_custkey = o_custkey\n  and o_comment not like '%special%requests%'\ngroup by c_custkey\nagg count(o_orderkey) as c_count\ngroup by c_count\nagg count(*) as custdist\norder by custdist desc, c_count desc"
+        }
+      ]
+    },
+    "nested-correlated": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from orders as o\nwhere \n  o_totalprice > {\n    from orders as o2\n    where o2.o_custkey = o.o_custkey\n    select AVG(o2.o_totalprice)\n  }\nselect o_orderkey, o_totalprice"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "from orders as o\nwhere o_totalprice > (\n  from orders as o2\n  where o2.o_custkey = o.o_custkey\n  agg avg(o2.o_totalprice)\n)"
+        }
+      ]
+    },
+    "nested-exists": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from supplier join nation on s_nationkey = n_nationkey\nwhere \n  n_name = 'CANADA'\n  and exists {\n    from partsupp\n    where \n      ps_suppkey = s_suppkey\n      and ps_availqty > {\n        from lineitem\n        where \n          l_partkey = ps_partkey\n          and l_suppkey = ps_suppkey\n          and l_shipdate >= '1994-01-01':date\n          and l_shipdate < '1995-01-01':date\n        select 0.5 * SUM(l_quantity)\n      }\n    select 1\n  }\nselect s_name, s_address"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "from supplier\njoin nation on s_nationkey = n_nationkey\nwhere n_name = 'CANADA'\nwhere exists(\n  from partsupp\n  where ps_suppkey = s_suppkey\n  where ps_availqty > (\n    from lineitem\n    where l_partkey = ps_partkey\n      and l_suppkey = ps_suppkey\n      and l_shipdate >= '1994-01-01'\n      and l_shipdate < '1995-01-01'\n    agg 0.5 * sum(l_quantity)\n  )\n)"
+        }
+      ]
+    },
+    "join-5way": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from customer\njoin orders on c_custkey = o_custkey\njoin lineitem on l_orderkey = o_orderkey\njoin part on p_partkey = l_partkey\njoin supplier on s_suppkey = l_suppkey\nwhere c_mktsegment = 'AUTOMOBILE' and o_orderdate >= '1995-01-01':date\nselect c_name, o_orderdate, l_extendedprice, p_name, s_name\norder by l_extendedprice desc\nlimit 20"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "from customer\njoin orders on c_custkey = o_custkey\njoin lineitem on l_orderkey = o_orderkey\njoin part on p_partkey = l_partkey\njoin supplier on s_suppkey = l_suppkey\nwhere c_mktsegment = 'AUTOMOBILE'\n  and o_orderdate >= '1995-01-01'\nselect c_name, o_orderdate, l_extendedprice, p_name, s_name\norder by l_extendedprice desc\nlimit 20"
+        }
+      ]
+    },
+    "agg-window": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from lineitem\nwhere l_shipdate >= '1995-01-01':date\nselect \n  l_orderkey,\n  l_extendedprice,\n  SUM(l_extendedprice) over (partition by l_orderkey) as order_total,\n  RANK() over (partition by l_orderkey order by l_extendedprice desc)\n  as price_rank,\n  l_extendedprice / SUM(l_extendedprice) over (partition by l_orderkey)\n  as price_pct\norder by l_orderkey, price_rank"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "from lineitem\nwhere l_shipdate >= '1995-01-01'\nselect\n  l_orderkey,\n  l_extendedprice,\n  sum(l_extendedprice) over (partition by l_orderkey) as order_total,\n  rank() over (partition by l_orderkey order by l_extendedprice desc) as price_rank,\n  l_extendedprice / sum(l_extendedprice) over (partition by l_orderkey) as price_pct\norder by l_orderkey, price_rank"
+        }
+      ]
+    },
+    "llm-sample-1": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from {\n  {\n    from customer\n    select \n      c_custkey,\n      c_name,\n      { from orders where o_custkey = c_custkey select COUNT(*) } as order_count,\n      { from orders where o_custkey = c_custkey select SUM(o_totalprice) }\n      as total_spent\n  }\n} as t\nwhere order_count > 0\nselect *\norder by total_spent desc\nlimit 10"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "from customer\nleft join orders on o_custkey = c_custkey\ngroup by c_custkey, c_name\nagg\n  count(o_orderkey) as order_count,\n  sum(o_totalprice) as total_spent\nwhere order_count > 0\norder by total_spent desc\nlimit 10"
+        }
+      ]
+    },
+    "complex-3": {
+      "stages": [
+        {
+          "name": "Original",
+          "wvlet": "from customer\njoin orders on c_custkey = o_custkey\njoin lineitem on o_orderkey = l_orderkey\njoin nation on c_nationkey = n_nationkey\nwhere \n  n_name = 'JAPAN'\n  and o_orderdate >= '1996-01-01':date\n  and o_orderdate < '1997-01-01':date\ngroup by c_name, c_acctbal\nwhere \n  SUM(l_extendedprice * (1 - l_discount)) > {\n    from {\n      {\n        from customer\n        join orders on c_custkey = o_custkey\n        join lineitem on o_orderkey = l_orderkey\n        join nation on c_nationkey = n_nationkey\n        where \n          n_name = 'JAPAN'\n          and o_orderdate >= '1995-01-01':date\n          and o_orderdate < '1996-01-01':date\n        group by c_custkey\n        where \n          SUM(l_extendedprice * (1 - l_discount)) > {\n            from {\n              {\n                from customer\n                join orders on c_custkey = o_custkey\n                join lineitem on o_orderkey = l_orderkey\n                join nation on c_nationkey = n_nationkey\n                where \n                  n_name = 'JAPAN'\n                  and o_orderdate >= '1994-01-01':date\n                  and o_orderdate < '1995-01-01':date\n                group by c_custkey\n                select SUM(l_extendedprice * (1 - l_discount)) as spend_94\n              }\n            } as base_94\n            select AVG(spend_94)\n          }\n        select c_custkey, SUM(l_extendedprice * (1 - l_discount)) as spend_95\n      }\n    } as good_95\n    select AVG(spend_95)\n  }\nselect c_name, c_acctbal, spend_96\norder by spend_96 desc"
+        },
+        {
+          "name": "DeDup",
+          "wvlet": "model yearly_spend(start_date: string, end_date: string) = {\n    from customer\n    join orders on c_custkey = o_custkey\n    join lineitem on o_orderkey = l_orderkey\n    join nation on c_nationkey = n_nationkey\n    where n_name = 'JAPAN'\n        and o_orderdate >= start_date.to_date\n        and o_orderdate < end_date.to_date\n    select c_name, c_acctbal, c_custkey,\n        spend = (l_extendedprice * (1 - l_discount))\n}\n\nfrom yearly_spend('1996-01-01', '1997-01-01')\ngroup by c_name, c_acctbal\nwhere spend.sum > {\n    from yearly_spend('1995-01-01', '1996-01-01')\n    group by c_custkey\n    where spend.sum > {\n        from yearly_spend('1994-01-01', '1995-01-01')\n        group by c_custkey\n        select spend.sum.avg\n    }\n    select spend.sum.avg\n}\nselect c_name, c_acctbal, spend_96 = spend.sum\norder by spend_96 desc"
+        }
+      ]
+    }
+  }
+}

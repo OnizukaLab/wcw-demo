@@ -1,0 +1,129 @@
+.order-alignment-panel {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg-secondary, #1e1e1e);
+  border-radius: 4px;
+}
+
+.alignment-divider {
+  width: 1px;
+  background: var(--border, #333);
+  flex-shrink: 0;
+}
+
+.alignment-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.alignment-column-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary, #aaa);
+  border-bottom: 1px solid var(--border, #333);
+  flex-shrink: 0;
+}
+
+.alignment-label {
+  flex: 1;
+}
+
+.alignment-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent, #64b5f6);
+}
+
+.alignment-inversions {
+  font-size: 10px;
+  color: #ef5350;
+  font-weight: 600;
+}
+
+.alignment-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.alignment-body {
+  flex: 1;
+  display: flex;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+}
+
+.alignment-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+
+.alignment-svg {
+  flex-shrink: 0;
+  display: block;
+}
+
+.alignment-node {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary, #e0e0e0);
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.alignment-node:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.06));
+}
+
+.alignment-node.inverted {
+  background: var(--bg-danger-subtle, rgba(239, 83, 80, 0.1));
+}
+
+.node-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alignment-axis-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 8px;
+  font-size: 9px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  border-top: 1px solid var(--border, #333);
+}
+
+/* SVG line styles */
+.crossing-line {
+  stroke-dasharray: 4 2;
+}
+
+.straight-line {
+  stroke-dasharray: none;
+}
