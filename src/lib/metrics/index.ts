@@ -15,7 +15,7 @@ export type SSOAMode = 'ast' | 'keyword';
 export interface MetricsOptions {
   language: 'sql' | 'wvlet';
   weights?: Partial<Record<string, number>>;
-  /** SSOA 計算モード: 'ast' (デフォルト, SDK LogicalPlanRank 使用) | 'keyword' (従来のキーワードベース) */
+  /** SSOA 計算モード: 'keyword' (デフォルト, キーワードベース) | 'ast' (SDK LogicalPlanRank 使用, 特定用途向け) */
   ssoaMode?: SSOAMode;
 }
 
@@ -24,19 +24,23 @@ export interface MetricsOptions {
  * @param code  - 分析対象のコード文字列
  * @param language - 'sql' | 'wvlet' (デフォルト: 'sql')
  * @param weights  - R_core の重み (省略可)
- * @param ssoaMode - SSOA 計算モード (デフォルト: 'ast')
+ * @param ssoaMode - SSOA 計算モード (デフォルト: 'keyword')
  */
 export function calculateAllMetrics(
   code: string,
   language: 'sql' | 'wvlet' = 'sql',
   weights?: Partial<Record<string, number>>,
-  ssoaMode: SSOAMode = 'ast',
+  ssoaMode: SSOAMode = 'keyword',
 ): CoreMetrics {
   if (!code || !code.trim()) {
     return { DRY: 0, SN: 0, SSOA: 0, JI: 0, PR: 0, R_core: 0 };
   }
 
-  // SSOA: AST モードの場合、SDK で計算を試み、失敗時はキーワード版にフォールバック
+  // SSOA: SQL・Wvlet ともにキーワードベースを使用。
+  // AST モード（WvletJS.readabilityScore）は model 定義ブロックで余分な inversion を
+  // カウントするため、リファクタ後に値が下がる問題がある。また SQL(AST) と Wvlet(keyword)
+  // でスケールが異なるとステージ間比較が不整合になるため、一律 keyword モードに統一する。
+  // ssoaMode='ast' を明示した場合のみ AST を試みる（外部から特定用途で呼ばれる場合）。
   let ssoa: number;
   if (ssoaMode === 'ast') {
     const astResult = calculateSSOAAst(code, language);
