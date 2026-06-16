@@ -10,6 +10,7 @@ interface Props {
 export function SummaryCard({ label, sqlValue, wvletValue, icon }: Props) {
   const improvement = wvletValue - sqlValue;
   const isPositive = improvement > 0;
+  const isZero = Math.abs(improvement) < 0.0001;
 
   return (
     <div style={{
@@ -29,10 +30,10 @@ export function SummaryCard({ label, sqlValue, wvletValue, icon }: Props) {
         </span>
         <span style={{
           fontSize: 12,
-          color: isPositive ? 'var(--accent-primary)' : 'var(--accent-danger)',
+          color: isZero ? 'var(--text-muted)' : isPositive ? 'var(--accent-primary)' : 'var(--accent-danger)',
           fontWeight: 600,
         }}>
-          {isPositive ? '+' : ''}{improvement.toFixed(3)}
+          {isZero ? '0.000' : isPositive ? `+${improvement.toFixed(3)}` : improvement.toFixed(3)}
         </span>
       </div>
       <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
