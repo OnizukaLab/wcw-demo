@@ -34,17 +34,34 @@ function calculateSSOASQL(code: string): number {
 
 const WVLET_FLOW_ORDER = ['from', 'join', 'where', 'group by', 'having', 'select', 'order by', 'limit', 'offset'];
 
+// { } ブロック（サブクエリ・model定義）を再帰的に除去する。
+// サブクエリは別スコープであり、メインクエリの節順とは独立しているため除去して評価する。
+// Wvlet ではすべての { } がサブクエリまたは model 定義であり、文字列リテラル等への誤削除は起きない。
+function stripBraceBlocks(code: string): string {
+  let result = code;
+  let prev: string;
+  do {
+    prev = result;
+    result = result.replace(/\{[^{}]*\}/gs, '');
+  } while (result !== prev);
+  return result;
+}
+
 function calculateSSOAWvlet(code: string): number {
-  const lines = code.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const lines = stripBraceBlocks(code).split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
   const kwPositions = new Map(WVLET_FLOW_ORDER.map((kw, i) => [kw, i]));
 
   const found: Array<{ lineIdx: number; kw: string }> = [];
+  let seenGroupBy = false;
   for (let i = 0; i < lines.length; i++) {
     const lower = lines[i].toLowerCase();
     for (const kw of WVLET_FLOW_ORDER) {
       if (lower.startsWith(kw)) {
-        found.push({ lineIdx: i, kw });
+        // group by の後に現れる where は Wvlet での HAVING 表現なので having として扱う
+        const effectiveKw = (kw === 'where' && seenGroupBy) ? 'having' : kw;
+        found.push({ lineIdx: i, kw: effectiveKw });
+        if (kw === 'group by') seenGroupBy = true;
         break;
       }
     }

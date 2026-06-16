@@ -10,6 +10,7 @@ interface Props {
 export function MetricDetailRow({ name, sqlValue, wvletValue, description }: Props) {
   const diff = wvletValue - sqlValue;
   const isPositive = diff > 0;
+  const isZero = Math.abs(diff) < 0.0001;
   const barWidth = Math.abs(diff) * 100; // scaled for 0-1 range
 
   return (
@@ -51,10 +52,10 @@ export function MetricDetailRow({ name, sqlValue, wvletValue, description }: Pro
         <AnimatedNumber value={wvletValue} decimals={3} />
       </div>
       <div style={{
-        color: isPositive ? 'var(--accent-primary)' : 'var(--accent-danger)',
+        color: isZero ? 'var(--text-muted)' : isPositive ? 'var(--accent-primary)' : 'var(--accent-danger)',
         fontWeight: 600, fontSize: 11, textAlign: 'right',
       }}>
-        {isPositive ? '+' : ''}{diff.toFixed(3)}
+        {isZero ? '0.000' : isPositive ? `+${diff.toFixed(3)}` : diff.toFixed(3)}
       </div>
       {description && (
         <div style={{ gridColumn: '1 / -1', fontSize: 10, color: 'var(--text-muted)', paddingLeft: 4 }}>
