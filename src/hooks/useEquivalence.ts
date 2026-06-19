@@ -48,7 +48,7 @@ export function useEquivalence() {
       try {
         const r1 = await duckdb.query(`
           SELECT * FROM (${originalSQL.replace(/;\s*$/, '')})
-          EXCEPT
+          EXCEPT ALL
           SELECT * FROM (${wvletAsSQL.replace(/;\s*$/, '')})
           LIMIT 11
         `);
@@ -65,7 +65,7 @@ export function useEquivalence() {
       try {
         const r2 = await duckdb.query(`
           SELECT * FROM (${wvletAsSQL.replace(/;\s*$/, '')})
-          EXCEPT
+          EXCEPT ALL
           SELECT * FROM (${originalSQL.replace(/;\s*$/, '')})
           LIMIT 11
         `);
@@ -85,13 +85,13 @@ export function useEquivalence() {
       setResult({
         status,
         equivalent: status === 'equivalent',
-        method: 'EXCEPT',
+        method: 'EXCEPT ALL',
         executionTimeMs: Math.round(totalTimeMs),
         sqlRowCount: test1RowCount,
         wvletRowCount: test2RowCount,
         error: test1Error || test2Error || undefined,
-        test1: { name: 'SQL EXCEPT Wvlet', query: '', rowCount: test1RowCount, timeMs: t1Time, error: test1Error },
-        test2: { name: 'Wvlet EXCEPT SQL', query: '', rowCount: test2RowCount, timeMs: t2Time, error: test2Error },
+        test1: { name: 'SQL EXCEPT ALL Wvlet', query: '', rowCount: test1RowCount, timeMs: t1Time, error: test1Error },
+        test2: { name: 'Wvlet EXCEPT ALL SQL', query: '', rowCount: test2RowCount, timeMs: t2Time, error: test2Error },
         totalTimeMs,
       });
     } catch (e) {
@@ -99,11 +99,11 @@ export function useEquivalence() {
       setResult({
         status: 'error',
         equivalent: false,
-        method: 'EXCEPT',
+        method: 'EXCEPT ALL',
         executionTimeMs: Math.round(totalTimeMs),
         error: String(e),
-        test1: { name: 'SQL EXCEPT Wvlet', query: '', rowCount: -1, timeMs: 0, error: String(e) },
-        test2: { name: 'Wvlet EXCEPT SQL', query: '', rowCount: -1, timeMs: 0, error: String(e) },
+        test1: { name: 'SQL EXCEPT ALL Wvlet', query: '', rowCount: -1, timeMs: 0, error: String(e) },
+        test2: { name: 'Wvlet EXCEPT ALL SQL', query: '', rowCount: -1, timeMs: 0, error: String(e) },
         totalTimeMs,
       });
     } finally {

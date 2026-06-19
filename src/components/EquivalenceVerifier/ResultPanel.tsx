@@ -17,7 +17,7 @@ export function ResultPanel({ result, loading }: Props) {
           borderTop: '2px solid #4ecdc4', borderRadius: '50%',
           animation: 'spin 0.8s linear infinite', marginRight: 8,
         }} />
-        Verifying equivalence on TPC-H SF=0.01...
+        Validating on sample data (TPC-H SF=0.01)...
       </div>
     );
   }
@@ -25,7 +25,7 @@ export function ResultPanel({ result, loading }: Props) {
   if (!result) {
     return (
       <div style={{ padding: 16, color: 'var(--text-muted)', fontSize: 13, textAlign: 'center' }}>
-        Click "Verify" to check SQL ↔ Wvlet equivalence
+        Click "Validate on sample data" to check SQL ↔ Wvlet equivalence
       </div>
     );
   }
