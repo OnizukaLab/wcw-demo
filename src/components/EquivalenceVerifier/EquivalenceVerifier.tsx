@@ -110,7 +110,7 @@ export function EquivalenceVerifier({ sqlCode, wvletCode, refactoredCode, onVeri
               transition: 'all 0.2s',
             }}
           >
-            {isVerifying ? 'Verifying...' : '▶ Verify'}
+            {isVerifying ? 'Validating...' : '▶ Validate on sample data'}
           </button>
         </div>
       </div>

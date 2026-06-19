@@ -10,8 +10,10 @@ export interface TransformStageData {
   wvlet: string;
 }
 
-/** 右パネルのタブ種別 */
-export type RightTab = 'wvlet' | 'refactored';
+/** パネルのタブ種別 */
+export type PaneTab = 'sql' | 'wvlet' | 'refactored';
+/** 後方互換 */
+export type RightTab = PaneTab;
 
 interface Props {
   sqlCode: string;
@@ -26,7 +28,7 @@ interface Props {
   /** SQL直接編集コールバック */
   onSqlChange?: (sql: string) => void;
   /** 右パネルのタブ変更コールバック */
-  onRightTabChange?: (tab: RightTab) => void;
+  onRightTabChange?: (tab: PaneTab) => void;
 }
 
 export function DualEditor({
@@ -42,18 +44,15 @@ export function DualEditor({
   const leftScrollRef = useRef<EditorView | null>(null);
   const rightScrollRef = useRef<EditorView | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [activeTab, setActiveTab] = useState<RightTab>('wvlet');
+  const [leftTab, setLeftTab] = useState<PaneTab>('sql');
+  const [rightTab, setRightTab] = useState<PaneTab>('wvlet');
 
-  // 基本変換 Wvlet (最初のステージ)
   const wvletOriginal = stages[0]?.wvlet ?? (intermediateCode ?? wvletCode);
-
-  // リファクタリング後 Wvlet (最後のステージ、ステージが2つ以上ある場合)
   const hasRefactored = stages.length > 1;
   const wvletRefactored = hasRefactored
     ? stages[stages.length - 1].wvlet
     : wvletOriginal;
 
-  // リファクタリングの改善指標
   const refactorReduction = hasRefactored
     ? Math.round((1 - wvletRefactored.split('\n').length / Math.max(wvletOriginal.split('\n').length, 1)) * 100)
     : 0;
@@ -61,24 +60,35 @@ export function DualEditor({
     ? (wvletRefactored.match(/^model\s+/gm) || []).length
     : 0;
 
-  // タブに応じた右ペインのコード
-  const rightCode = activeTab === 'refactored' ? wvletRefactored : wvletOriginal;
+  const getCode = useCallback((tab: PaneTab): string => {
+    if (tab === 'sql') return sqlCode;
+    if (tab === 'refactored') return wvletRefactored;
+    return wvletOriginal;
+  }, [sqlCode, wvletOriginal, wvletRefactored]);
 
-  // タブ変更ハンドラ
-  const handleTabChange = useCallback((tab: RightTab) => {
-    setActiveTab(tab);
-    // ステージインデックスも同期: Wvlet → 0, Refactored → last
-    if (tab === 'wvlet') {
-      onStageChange(0);
-    } else if (stages.length > 1) {
-      onStageChange(stages.length - 1);
-    }
+  const getLang = (tab: PaneTab): 'sql' | 'wvlet' => tab === 'sql' ? 'sql' : 'wvlet';
+
+  const syncStage = useCallback((tab: PaneTab) => {
+    if (tab === 'wvlet') onStageChange(0);
+    else if (tab === 'refactored' && stages.length > 1) onStageChange(stages.length - 1);
+  }, [onStageChange, stages.length]);
+
+  const handleLeftTabChange = useCallback((tab: PaneTab) => {
+    if (tab === 'refactored' && !hasRefactored) return;
+    setLeftTab(tab);
+  }, [hasRefactored]);
+
+  const handleRightTabChange = useCallback((tab: PaneTab) => {
+    if (tab === 'refactored' && !hasRefactored) return;
+    setRightTab(tab);
+    syncStage(tab);
     onRightTabChange?.(tab);
-  }, [onStageChange, onRightTabChange, stages.length]);
+  }, [hasRefactored, syncStage, onRightTabChange]);
 
   // stages が変わったらタブをリセット
   useEffect(() => {
-    setActiveTab('wvlet');
+    setLeftTab('sql');
+    setRightTab('wvlet');
   }, [stages]);
 
   // 同期スクロール
@@ -110,10 +120,17 @@ export function DualEditor({
     [syncing],
   );
 
-  const sqlTokens = countTokens(sqlCode, 'sql');
-  const wvletTokens = countTokens(rightCode, 'wvlet');
+  const leftCode = getCode(leftTab);
+  const rightCode = getCode(rightTab);
+  const leftTokens = countTokens(leftCode, getLang(leftTab));
+  const rightTokens = countTokens(rightCode, getLang(rightTab));
 
-  // タブスタイル
+  const tabLabel = (tab: PaneTab): string => {
+    if (tab === 'sql') return 'SQL';
+    if (tab === 'refactored') return 'Refactored';
+    return 'Wvlet';
+  };
+
   const tabStyle = (isActive: boolean, disabled = false): React.CSSProperties => ({
     padding: '5px 16px',
     fontSize: 12,
@@ -127,30 +144,77 @@ export function DualEditor({
     whiteSpace: 'nowrap' as const,
   });
 
+  const renderTabHeader = (
+    active: PaneTab,
+    onChange: (tab: PaneTab) => void,
+  ) => (
+    <div style={{
+      display: 'flex', alignItems: 'center',
+      borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-inset)',
+    }}>
+      {(['sql', 'wvlet', 'refactored'] as PaneTab[]).map((tab) => {
+        const disabled = tab === 'refactored' && !hasRefactored;
+        return (
+          <button
+            key={tab}
+            style={tabStyle(active === tab, disabled)}
+            onClick={() => !disabled && onChange(tab)}
+            title={
+              tab === 'refactored' && !hasRefactored
+                ? 'リファクタリング結果なし（変換と同一）'
+                : undefined
+            }
+          >
+            {tabLabel(tab)}
+            {tab === 'refactored' && hasRefactored && (
+              <>
+                {modelCount > 0 && (
+                  <span style={{
+                    marginLeft: 6, fontSize: 9, padding: '1px 5px',
+                    borderRadius: 4, background: 'var(--bg-accent-strong)',
+                    color: 'var(--accent-primary)',
+                  }}>
+                    {modelCount} model{modelCount > 1 ? 's' : ''}
+                  </span>
+                )}
+                {refactorReduction > 0 && (
+                  <span style={{
+                    marginLeft: 4, fontSize: 9, padding: '1px 5px',
+                    borderRadius: 4, background: 'var(--bg-accent-medium)',
+                    color: 'var(--accent-primary)',
+                  }}>
+                    -{refactorReduction}%
+                  </span>
+                )}
+              </>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="dual-editor" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Line Counter */}
-      <LineCounter sqlTokens={sqlTokens} wvletTokens={wvletTokens} />
+      <LineCounter
+        leftLabel={tabLabel(leftTab)}
+        rightLabel={tabLabel(rightTab)}
+        leftTokens={leftTokens}
+        rightTokens={rightTokens}
+      />
 
       {/* Dual Panes */}
-      <div
-        style={{ display: 'flex', flex: 1, gap: 2, overflow: 'hidden' }}
-      >
-        {/* Left: SQL */}
+      <div style={{ display: 'flex', flex: 1, gap: 2, overflow: 'hidden' }}>
+        {/* Left Pane */}
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <div style={{
-            padding: '4px 12px', fontSize: 11, color: 'var(--text-tertiary)',
-            borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-card)',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          }}>
-            <span>SQL {onSqlChange ? '(editable)' : '(Original)'}</span>
-          </div>
+          {renderTabHeader(leftTab, handleLeftTabChange)}
           <div style={{ flex: 1, overflow: 'auto' }}>
             <CodePane
-              code={sqlCode}
-              language="sql"
-              readOnly={!onSqlChange}
-              onChange={onSqlChange}
+              code={leftCode}
+              language={getLang(leftTab)}
+              readOnly={leftTab !== 'sql' || !onSqlChange}
+              onChange={leftTab === 'sql' ? onSqlChange : undefined}
               scrollRef={leftScrollRef}
               onScroll={handleLeftScroll}
             />
@@ -160,62 +224,13 @@ export function DualEditor({
         {/* Divider */}
         <div style={{ width: 2, background: 'var(--border-subtle)' }} />
 
-        {/* Right: Wvlet (tabbed) */}
+        {/* Right Pane */}
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {/* Tab header */}
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-inset)',
-          }}>
-            <button
-              style={tabStyle(activeTab === 'wvlet')}
-              onClick={() => handleTabChange('wvlet')}
-            >
-              Wvlet
-            </button>
-            <button
-              style={tabStyle(activeTab === 'refactored', !hasRefactored)}
-              onClick={() => hasRefactored && handleTabChange('refactored')}
-              title={hasRefactored ? 'リファクタリング後の Wvlet（model 抽出による DRY 化）' : 'リファクタリング結果なし（変換と同一）'}
-            >
-              Refactored
-              {hasRefactored && (
-                <>
-                  {modelCount > 0 && (
-                    <span style={{
-                      marginLeft: 6, fontSize: 9, padding: '1px 5px',
-                      borderRadius: 4, background: 'var(--bg-accent-strong)',
-                      color: 'var(--accent-primary)',
-                    }}>
-                      {modelCount} model{modelCount > 1 ? 's' : ''}
-                    </span>
-                  )}
-                  {refactorReduction > 0 && (
-                    <span style={{
-                      marginLeft: 4, fontSize: 9, padding: '1px 5px',
-                      borderRadius: 4, background: 'var(--bg-accent-medium)',
-                      color: 'var(--accent-primary)',
-                    }}>
-                      -{refactorReduction}%
-                    </span>
-                  )}
-                  {modelCount === 0 && refactorReduction <= 0 && (
-                    <span style={{
-                      marginLeft: 6, fontSize: 9, padding: '1px 5px',
-                      borderRadius: 4, background: 'var(--bg-accent-strong)',
-                      color: 'var(--accent-primary)',
-                    }}>
-                      {stages[stages.length - 1].name}
-                    </span>
-                  )}
-                </>
-              )}
-            </button>
-          </div>
+          {renderTabHeader(rightTab, handleRightTabChange)}
           <div style={{ flex: 1, overflow: 'auto' }}>
             <CodePane
               code={rightCode}
-              language="wvlet"
+              language={getLang(rightTab)}
               readOnly
               scrollRef={rightScrollRef}
               onScroll={handleRightScroll}
